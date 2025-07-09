@@ -7,33 +7,33 @@ from src.models import train_and_score_model  # ML-powered SmartScore function
 st.set_page_config(page_title="Broker SmartScore ML Dashboard", layout="wide")
 st.title("🤖 Broker SmartScore – ML-Powered Dashboard")
 
-# File uploader + fallback to demo data
+# Upload or fallback to data/synthetic_broker_submissions.csv
 uploaded_file = st.file_uploader("📤 Upload your broker submissions CSV", type="csv")
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.success("✅ Using uploaded data.")
 else:
-    st.warning("⚠️ No file uploaded. Loading demo data instead.")
+    st.warning("⚠️ No file uploaded. Loading demo data from 'data/synthetic_broker_submissions.csv'.")
     df = pd.read_csv("data/synthetic_broker_submissions.csv")
 
-# Show data
+# Show first few rows
 st.subheader("📄 Submission Data (Demo or Uploaded)")
 st.dataframe(df.head())
 
-# Compute SmartScores and metrics
+# Run ML model
 broker_scores, eval_metrics = train_and_score_model(df)
 
-# Filtered table
+# Display filtered scores
 st.subheader("🎯 Broker SmartScores")
 score_range = st.slider("Filter by SmartScore:", 0, 100, (20, 90))
 filtered = broker_scores[broker_scores['SmartScore'].between(*score_range)]
 st.dataframe(filtered)
 
-# Download button
+# Download option
 st.download_button("📥 Download Filtered Scores", filtered.to_csv(index=False), "broker_scores.csv")
 
-# Evaluation Metrics
+# Display metrics
 st.subheader("📊 Model Evaluation Metrics")
 st.markdown(f"""
 - **Accuracy**: `{eval_metrics['Accuracy']:.2f}`
@@ -41,7 +41,7 @@ st.markdown(f"""
 - **AUC Score**: `{eval_metrics['AUC']:.2f}`
 """)
 
-# Visual Insights
+# Visuals
 st.subheader("📈 Visual Insights")
 col1, col2 = st.columns(2)
 
@@ -59,7 +59,7 @@ with col2:
     ax2.set_title("Recommendation Breakdown")
     st.pyplot(fig2)
 
-# Score distribution
+# Histogram of scores
 fig3, ax3 = plt.subplots()
 sns.histplot(broker_scores['SmartScore'], bins=10, kde=True, ax=ax3, color="skyblue")
 ax3.set_title("Distribution of SmartScores")
