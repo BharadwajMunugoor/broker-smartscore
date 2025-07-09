@@ -60,7 +60,7 @@ def train_and_score_model(df, thresholds=(70, 40)):
         elif score >= thresholds[1]:
             return "Neutral"
         else:
-            return "Watchlist"
+            return "Monitor"
 
     broker_df['SmartScore'] = broker_df['SmartScore'].round(2)
     broker_df['Recommendation'] = broker_df['SmartScore'].apply(recommend)
