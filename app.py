@@ -30,12 +30,7 @@ st.subheader("📝 Submission Data (Demo or Uploaded)")
 st.dataframe(df.head())
 
 # Run model and get scores
-try:
-    broker_scores, eval_metrics, feature_df = train_and_score_model(df)
-except ValueError as e:
-    st.error(f"🚨 Model training failed: {str(e)}")
-    st.stop()
-
+broker_scores, eval_metrics, feature_df = train_and_score_model(df)
 
 # Filter and display SmartScores
 st.subheader("🎯 Broker SmartScores")
