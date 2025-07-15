@@ -5,24 +5,24 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score
 
-def train_and_score_model(df, threshold=(0.8, 0)):
+def train_and_score_model(df, threshold=0.5):
     # Derive responsiveness score
     df['responsiveness_score'] = 1 / (1 + df['responsiveness_days'])
 
     # Broker-level metrics
-    broker_df = df.groupby("broker_id").agg({
+    broker_df = df.groupby('broker_id').agg({
         'completeness_score': 'mean',
         'appetite_alignment': 'mean',
         'responsiveness_score': 'mean',
         'quote_to_bind': 'mean'
     }).reset_index()
 
-    # Target: High performers if quote_to_bind rate >= threshold
-    broker_df['high_performer'] = (broker_df['quote_to_bind'] >= threshold[0]).astype(int)
+    # Target label: High performers (if quote_to_bind >= threshold)
+    broker_df["High_performer"] = (broker_df["quote_to_bind"] >= threshold).astype(int)
 
     # Features and labels
-    X = broker_df[['completeness_score', 'appetite_alignment', 'responsiveness_score']]
-    y = broker_df['high_performer']
+    X = broker_df[["completeness_score", "appetite_alignment", "responsiveness_score"]]
+    y = broker_df["High_performer"]
 
     # Standardize features
     scaler = StandardScaler()
@@ -30,12 +30,12 @@ def train_and_score_model(df, threshold=(0.8, 0)):
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled, y, test_size=0.3, random_state=42, stratify=y
+        X_scaled, y, test_size=0.3, random_state=42, stratify=y
     )
 
-    # Check for binary class presence
-    if y.nunique() < 2:
-        raise ValueError("Training data must contain at least two classes (e.g., 0 and 1) for classification.")
+    # Check for binary class presence in both sets
+    if y_train.nunique() < 2 or y_test.nunique() < 2:
+        raise ValueError("Both training and test sets must contain at least two classes.")
 
     # Train model
     model = RandomForestClassifier(random_state=42)
@@ -52,29 +52,24 @@ def train_and_score_model(df, threshold=(0.8, 0)):
 
     # Feature importance
     importances = model.feature_importances_
-    feature_names = X.columns.tolist()
     feature_df = pd.DataFrame({
-        'Feature': feature_names,
+        'Feature': X.columns,
         'Importance': importances
-    }).sort_values(by='Importance', ascending=False)
+    }).sort_values('Importance', ascending=False)
 
     # Predict SmartScore for all brokers
-    try:
-        broker_df["SmartScore"] = model.predict_proba(X_scaled)[:, 1] * 100
-    except IndexError:
-        raise ValueError("Model prediction failed: possibly only one class was found during training.")
-
+    broker_df["SmartScore"] = model.predict_proba(X_scaled)[:, 1] * 100
 
     # Recommendation logic
     def recommend(score):
         if score >= 70:
-            return "Prioritize"
+            return "Partner"
         elif score >= 40:
             return "Neutral"
         else:
-            return "Monitor"
+            return "Remove"
 
-    broker_df['SmartScore'] = broker_df['SmartScore'].round()
-    broker_df['Recommendation'] = broker_df['SmartScore'].apply(recommend)
+    broker_df["SmartScore"] = broker_df["SmartScore"].round()
+    broker_df["Recommendation"] = broker_df["SmartScore"].apply(recommend)
 
     return broker_df, evaluation, feature_df
