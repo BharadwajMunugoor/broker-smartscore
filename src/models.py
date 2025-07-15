@@ -30,6 +30,10 @@ def train_and_score_model(df, threshold=(0.8, 0)):
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+    
+    # Check for binary class presence
+    if y.nunique() < 2:
+        raise ValueError("Training data must contain at least two classes (e.g., 0 and 1) for classification.")
 
     # Train model
     model = RandomForestClassifier(random_state=42)
