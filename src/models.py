@@ -59,7 +59,11 @@ def train_and_score_model(df, threshold=(0.8, 0)):
     }).sort_values(by='Importance', ascending=False)
 
     # Predict SmartScore for all brokers
-    broker_df['SmartScore'] = model.predict_proba(X_scaled)[:, 1] * 100
+    try:
+        broker_df["SmartScore"] = model.predict_proba(X_scaled)[:, 1] * 100
+    except IndexError:
+        raise ValueError("Model prediction failed: possibly only one class was found during training.")
+
 
     # Recommendation logic
     def recommend(score):
