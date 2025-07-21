@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score
 
-def train_and_score_model(df, threshold=0.6, random_state=42):
+def train_and_score_model(df, threshold=(0.6, 0), random_state=42):
     # Derive responsiveness score
     df['responsiveness_score'] = 1 / (1 + df['responsiveness_days'])
 
